@@ -1,1 +1,41 @@
 \chapter{Assignment 1}
+The first problem is solvable with yices. This can be expressed as an SMT problem with linear integer equations.  In these linear equations $N_i$ refers to the pallets of nuzzles on truck $i$, $P_i$ refers to the pallets of prittles on truck $i$, $S_i$ refers to the pallets of skipples on truck $i$, $C_i$ refers to the pallets of crottles on truck $i$ and $D_i$ refers to the pallets of dupples on truck $i$.
+
+The result of the assignment has to be subject too the following equations:
+\begin{align*} 
+\sum_{i=0}^{6}N_i &= 4 &\text{4 nuzzles}\\ 
+\sum_{i=0}^{6}S_i &= 8 &\text{8 skipples}\\ 
+\sum_{i=0}^{6}C_i &= 10 &\text{10 crottles}\\ 
+\sum_{i=0}^{6}D_i &= 5 &\text{5 dupples}\\
+\forall_{1 \le i \le 6}\; &7800 \ge 700 N_i + 800 P_i + 1000 S_i + 1500 C_i + 100 D_i &\text{max weight on trucks}\\
+\forall_{1 \le i \le 6}\; &\neg (P_i > 0 \land C_i > 0) &\text{no prittles and crottles together}\\
+\forall_{1 \le i \le 6}\; &D_i \le 2 &\text{maximum of 2 dupples}\\
+\forall_{3 \le i \le 6}\; &S_i = 0 &\text{in truck 3 through 6 no skipples}
+\end{align*}
+
+And maximization the following equation:
+\begin{align*}
+\sum_{i=0}^{6}P_i \\ 
+\end{align*}
+
+This is possible as input for yices, except for the maximize function. The maximal value of maximization function has to be found by trial and error. The maximum number of prittles that can be added is 25.
+The resulting load of the trucks can be found in table \ref{table:assignment1}.
+\begin{table}[]
+	\centering
+	\caption{Pallets on the trucks}
+	\label{table:assignment1}
+	\begin{tabular}{@{}llllllll@{}}
+		\toprule
+		Truck  & Nittles & Prittles & Skipples & Crottles & Dupples & Weight on Truck & Max Weight \\ \midrule
+		1      & 0       & 7        & 2        & 0        & 1       & 7700            & 7800       \\
+		2      & 0       & 2        & 6        & 0        & 2       & 7800            & 7800       \\
+		3      & 2       & 8        & 0        & 0        & 0       & 7800            & 7800       \\
+		4      & 0       & 0        & 0        & 5        & 0       & 7500            & 7800       \\
+		5      & 0       & 0        & 0        & 5        & 2       & 7700            & 7800       \\
+		6      & 2       & 8        & 0        & 0        & 0       & 7800            & 7800       \\
+		&         &          &          &          &         &                 &            \\
+		\toprule
+		Total  & 4       & 25       & 8        & 10       & 5       &                 &            \\
+		Unit weight & 700     & 800      & 1000     & 1500     & 100     &                 &            \\ \bottomrule
+	\end{tabular}
+\end{table}
