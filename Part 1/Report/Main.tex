@@ -1,0 +1,46 @@
+\documentclass[11pt,a4paper]{report}
+
+\usepackage{iftex}
+\usepackage{color}
+\ifPDFTeX
+\usepackage[utf8]{inputenc}
+\fi
+\usepackage[english]{babel}
+\usepackage[english]{tuereport2008}
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{pgfplots}
+
+\hypersetup{
+	colorlinks,
+	citecolor=black,
+	filecolor=black,
+	linkcolor=black,
+	urlcolor=black
+}
+
+\graphicspath{{images/}}
+
+\title{Part 1}
+\subtitle{2IMF25: Automated reasoning}
+\author{Michiel Fortuin\\Leo ....}
+\version{1.0}
+\orderissuer{}
+\copyholder{}
+\administrativeunit{Department of Mathematics and Computer Science}   % insert department name here
+\department{}     % subdepartment, or group
+\website{}
+\reference{}
+
+\begin{document}
+\maketitle
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+\input{Assignment1}
+\input{Assignment2}
+\input{Assignment3}
+\input{Assignment4}
+
+\end{document} 
