@@ -1,0 +1,134 @@
+MODULE main
+
+VAR
+	TLoc: {Sa, Aa, Ba, Ca};
+	TLoad: 0..320;
+	AStock: -100..120;
+	BStock: -100..120;
+	CStock: -100..200;
+	u: 0..200;	
+	TLoc2: {Sa, Aa, Ba, Ca};
+	TLoad2: 0..400;
+	AStock2: -100..120;
+	BStock2: -100..120;
+	CStock2: -100..200;
+
+ASSIGN
+	init(TLoc) := Sa;
+	init(TLoad) := 0;
+	init(AStock) := 40;
+	init(BStock) := 30;
+	init(CStock) := 145;
+	next(u) := {0..200};
+	
+	init(TLoc2) := {Sa, Aa, Ba, Ca};
+	init(TLoad2) := {0..400};
+	init(AStock2) := {-100..120};
+	init(BStock2) := {-100..120};
+	init(CStock2) := {-100..200};
+
+TRANS
+case 
+TLoc = Sa:
+	next(TLoad) = 320 & 
+	(
+		(
+			next(TLoc) = Aa &
+			next(AStock) = AStock - 29 &
+			next(BStock) = BStock - 29 &
+			next(CStock) = CStock - 29
+		)
+		xor
+		(
+			next(TLoc) = Ba &
+			next(AStock) = AStock - 21 &
+			next(BStock) = BStock - 21 &
+			next(CStock) = CStock - 21
+		)
+	);
+TLoc = Aa:
+	u < TLoad & u + AStock < 120 &
+	next(TLoad) = TLoad - u & 
+	(
+		(
+			next(TLoc) = Sa &
+			next(AStock) = AStock + u - 29 &
+			next(BStock) = BStock - 29 &
+			next(CStock) = CStock - 29
+		)
+		xor
+		(
+			next(TLoc) = Ba &
+			next(AStock) = AStock + u - 17 &
+			next(BStock) = BStock - 17 &
+			next(CStock) = CStock - 17
+		)
+		xor
+		(
+			next(TLoc) = Ca &
+			next(AStock) = AStock + u - 32 &
+			next(BStock) = BStock - 32 &
+			next(CStock) = CStock - 32
+		)
+	);
+TLoc = Ba:
+	u < TLoad & u + BStock < 120 &
+	next(TLoad) = TLoad - u & 
+	(
+		(
+			next(TLoc) = Sa &
+			next(AStock) = AStock - 21 &
+			next(BStock) = BStock + u - 21 &
+			next(CStock) = CStock - 21
+		)
+		xor
+		(
+			next(TLoc) = Aa &
+			next(AStock) = AStock - 17 &
+			next(BStock) = BStock + u - 17 &
+			next(CStock) = CStock - 17
+		)
+		xor
+		(
+			next(TLoc) = Ca &
+			next(AStock) = AStock - 37 &
+			next(BStock) = BStock + u - 37 &
+			next(CStock) = CStock - 37
+		)
+	);
+TLoc = Ca:
+	u < TLoad & u + CStock < 200 &
+	next(TLoad) = TLoad - u & 
+	(
+		(
+			next(TLoc) = Aa &
+			next(AStock) = AStock - 32 &
+			next(BStock) = BStock - 32 &
+			next(CStock) = CStock + u - 32
+		)
+		xor
+		(
+			next(TLoc) = Ba &
+			next(AStock) = AStock - 37 &
+			next(BStock) = BStock - 37 &
+			next(CStock) = CStock + u - 37
+		)
+	);
+esac;
+
+/--
+	init(TLoc) := Sa;
+	init(TLoad) := 0;
+	init(AStock) := 40;
+	init(BStock) := 30;
+	init(CStock) := 145;
+--/
+--LTLSPEC G (AStock >= 0 & BStock >= 0 & CStock >= 0)
+LTLSPEC 
+!(
+	AStock > AStock2 & O [1, 10000] AStock = AStock2
+	& BStock > BStock2 & O [1, 10000] BStock = BStock2
+	& CStock > CStock2 & O [1, 10000] CStock = CStock2
+	& TLoc = TLoc2 & O [1, 10000] TLoc = TLoc2
+	& TLoad > TLoad2 & O [1, 10000] TLoad = TLoad2
+)
