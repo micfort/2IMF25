@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-namespace Assignment2._1a
+namespace Assignment2._1b
 {
 	class Program
 	{
@@ -25,6 +25,7 @@ namespace Assignment2._1a
 		const string CStock = "CStock";
 		const string CMaxStock = "200";
 		const string U = "U";
+		const string I = "I";
 
 		const string SA = "29";
 		const string SB = "21";
@@ -36,14 +37,14 @@ namespace Assignment2._1a
 		static Process proc;
 
 		public static string operation(string operation, params string[] attributes)
-        {
+		{
 			return string.Format("({1} {0})", string.Join(" ", attributes), operation);
 		}
 
 		public static string and(params string[] attributes)
 		{
 			return operation("and", attributes);
-        }
+		}
 		public static string or(params string[] attributes)
 		{
 			return operation("or", attributes);
@@ -51,6 +52,11 @@ namespace Assignment2._1a
 		public static string equals(string first, string second)
 		{
 			return operation("=", first, second);
+		}
+
+		public static string NotEquals(string first, string second)
+		{
+			return operation("/=", first, second);
 		}
 
 		public static string array(string arrayName, string index)
@@ -87,6 +93,11 @@ namespace Assignment2._1a
 			return operation(">=", first, second);
 		}
 
+		public static string Not(string first)
+		{
+			return operation("not", first);
+		}
+
 		public static void start(string funs, string logic)
 		{
 			write("(benchmark test.smt");
@@ -105,17 +116,15 @@ namespace Assignment2._1a
 		{
 			output.WriteLine(s, p);
 			//Console.WriteLine(s, p);
-        }
-
-
+		}
 
 		public static void Transitions(int t)
 		{
 			write(
 				or(
 					and(
-						equals(array(TLoc, t), S), 
-						equals(array(TLoad, t+1), TMaxLoad),
+						equals(array(TLoc, t), S),
+						equals(array(TLoad, t + 1), TMaxLoad),
 						or(
 							and(
 								equals(array(TLoc, t + 1), A),
@@ -214,9 +223,32 @@ namespace Assignment2._1a
 			write(GreaterEqual(array(CStock, t), "0"));
 		}
 
+		static void Repeats(int timesteps)
+		{
+			write("(or ");
+			for (int j = 0; j <= timesteps; j++)
+			{
+				for (int i = 0; i < j; i++)
+				{
+					write(
+						and(
+							equals(array(AStock, j), array(AStock, i)),
+							equals(array(BStock, j), array(BStock, i)),
+							equals(array(CStock, j), array(CStock, i)),
+							equals(array(TLoc, j), array(TLoc, i)),
+							equals(array(TLoad, j), array(TLoad, i)),
+							equals(array(I, 0), i.ToString()),
+							equals(array(I, 1), j.ToString())
+                        )
+					);
+				}
+			}
+			write(")");
+		}
+
 		static void outputModel(int timesteps)
 		{
-			start("(TLoad Int Int) (TLoc Int Int) (AStock Int Int) (BStock Int Int) (CStock Int Int) (U Int Int)", "QF_UFLIA");
+			start("(TLoad Int Int) (TLoc Int Int) (AStock Int Int) (BStock Int Int) (CStock Int Int) (U Int Int) (I Int Int)", "QF_UFLIA");
 
 			write(equals(array(TLoc, 0), S));
 			write(equals(array(AStock, 0), "40"));
@@ -227,8 +259,9 @@ namespace Assignment2._1a
 			{
 				Requirements(i);
 				Transitions(i);
-			}
+            }
 			Requirements(timesteps);
+			Repeats(timesteps);
 
 			end();
 		}
@@ -250,7 +283,6 @@ namespace Assignment2._1a
 			start.RedirectStandardOutput = true;
 			start.UseShellExecute = false;
 			start.CreateNoWindow = true;
-			int exitCode;
 
 			proc = Process.Start(start);
 
@@ -268,38 +300,63 @@ namespace Assignment2._1a
 			proc.WaitForExit();
 
 			string result = proc.StandardOutput.ReadToEnd();
+			//Console.WriteLine(result);
 			if (result.Contains("unsat"))
 			{
 				return false;
 			}
-			else
+			else if (result.Contains("sat"))
 			{
-				return true;	
+				return true;
 			}
-        }
+			throw new Exception();
+		}
+
+		static void ShowResult(int timesteps)
+		{
+			startProcess(true);
+
+			outputModel(timesteps);
+
+			output.Close();
+
+			proc.WaitForExit();
+
+			string result = proc.StandardOutput.ReadToEnd();
+			Console.WriteLine(result);
+		}
+
+		static void outputToFile(string filename, int timesteps)
+		{
+			output = new StreamWriter(filename);
+			outputModel(timesteps);
+			output.Close();
+		}
 
 
 		static void Main(string[] args)
 		{
-			int timesteps = 1;
+			//outputToFile(@"C:\Users\michiel\Dropbox\School\2IMF25 - Automated Reasoning\2IMF25\Assignment2.1.b.smt", 35);
+            int timesteps = 2;
 			Console.WriteLine("timesteps: {0}", timesteps);
-			while (succesful(timesteps) && timesteps < 100)
+			while (timesteps < 100 && !succesful(timesteps))
 			{
 				timesteps++;
 				Console.WriteLine("timesteps: {0}", timesteps);
 			}
 
-			if(timesteps == 100)
+			if (timesteps == 100)
 			{
-				Console.WriteLine("no unsat in 100 timesteps");
+				Console.WriteLine("no sat in 100 timesteps");
 				Console.ReadKey();
 			}
-			else 
+			else
 			{
-				Console.WriteLine("timesteps needed for unsat: {0}", timesteps);
+				ShowResult(timesteps);
+				Console.WriteLine("timesteps needed for sat: {0}", timesteps);
 				Console.ReadKey();
 			}
-			
+
 		}
 	}
 }
