@@ -1,6 +1,25 @@
 \chapter{Exercise 1}
-general model for the truck and villages:
-Initialization:
+
+\section{Problem}
+Three non-self-supporting villages A, B and C in the middle of nowhere consume one food package each per time unit. The required food packages are delivered by a truck, having a capacity of 300 food packages. In the table \ref{table:villagesdistance} the distances between villages are expressed in time units including loading and delivering. The truck has to pick up its food packages at location S containing an unbounded supply. The villages only have a limited capacity to store food packages: for A and B this capacity is 120, for C it is 200. Initially, the truck is in S and is fully loaded, and in A, B and C there are 40, 30 and 145 food packages, respectively.
+
+\begin{table}[]
+	\centering
+	\caption{distance between villages}
+	\label{table:villagesdistance}
+	\begin{tabular}{@{}lllll@{}}
+		\toprule
+		& S  & A  & B  & C  \\ \midrule
+		S & -  & 29 & 21 & -  \\
+		A & 29 & -  & 17 & 32 \\
+		B & 21 & 17 & -  & 37 \\
+		C & -  & 32 & 37 & -  \\ \bottomrule
+	\end{tabular}
+\end{table}
+
+\section{Solution}
+
+Here we describe the general model for the villages and the truck. The first state is given in the problem and is as the following formula.
 \begin{align*}
 T_{0,location} =& S \\
 A_{0,stock} =& 40 \\
@@ -71,14 +90,14 @@ Notes:
 \item Assumption, the truck is always fully loaded at S
 \end{itemize}
 
-\section{sub question A}
+\subsection{sub question A}
 To check this, the food supply may never run out and if it does, the truck should not be present. Whe have checked this with a limited number of timesteps in SMT. We checked first with a script with 1 timestep and then added a timestep until we reached a unsat. We needed 22 to timesteps for that.
 
 
-\section{sub question B}
+\subsection{sub question B}
 If the state is recuring, than it is possible to create an infinite loop where the requirement from question A holds. To elaborate a state $t_1 \in \mathbb{N}$, should be the same state as $t_2 \in \mathbb{N}$, where $t_1$ happened earlier than $t_2$, e.g. $t_1 < t_2$. Two states are the same iff $T_{t_1,location} = T_{t_1,location}$, $A_{t_1,stock} = A_{t_2,stock}$, $B_{t_1,stock} = B_{t_2,stock}$ and $C_{t_1,stock} = C_{t_2,stock}$.
 
-This is also checked with the same model as question A, but a if a state is recuring than an loop can be created and all the villages are fed. So the describes requirement is added, that at least 2 states should be the same. With this we started with 2 timesteps and increased it, until we found a solution. At 12 timesteps we found a solution.In table \ref{table:LoopVillages}, the steps are shown. The highlighted steps (step 5 and 12) are equal in state, that way we can loop from 5 to 12 and feed the villages.
+This is also checked with the same model as question A, but a if a state is recuring than an loop can be created and all the villages are fed. So the describes requirement is added, that at least 2 states should be the same. With this we started with 2 timesteps and increased it, until we found a solution. At 12 timesteps we found a solution.In table \ref{table:LoopVillages}, the steps are shown. The highlighted steps (step 5 and 12) are equal in state, that way we can loop from 5 to 12 and feed the villages indefinitely.
 
 \begin{table}[]
 	\centering
@@ -105,5 +124,5 @@ This is also checked with the same model as question A, but a if a state is recu
 	\end{tabular}
 \end{table}
 
-\section{sub question C}
+\subsection{sub question C}
 For the last sub question, we have run both solutions, but with a maximal $T_{load}$ of 318. The only solution has finished was that of A. It gave an unsat with 68 timesteps. That means that 318 is too little to feed the villages 
