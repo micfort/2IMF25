@@ -1,0 +1,41 @@
+============================== prooftrans ============================
+Prover9 (32) version Dec-2007, Dec 2007.
+Process 28354 was started by leo on leo-ThinkPad-W520,
+Sun Jan 10 23:54:20 2016
+The command was "/home/leo/Subjects/Y2Q2/2IMF25 - Automated Reasoning/p9m4-v05/bin/prover9".
+============================== end of head ===========================
+
+============================== end of input ==========================
+
+============================== PROOF =================================
+
+% -------- Comments from original proof --------
+% Proof 1 at 0.07 (+ 0.01) seconds.
+% Length of proof is 21.
+% Level of proof is 7.
+% Maximum clause weight is 27.
+% Given clauses 140.
+
+1 R(x,y) -> R(a(z,x),a(z,y)) # label(non_clause).  [assumption].
+2 RR(x,y) & R(y,z) -> RR(x,z) # label(non_clause).  [assumption].
+3 RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(b,a(d,a(c,a(e,a(f,a(b,g))))))) # label(non_clause) # label(goal).  [goal].
+4 R(a(x,a(y,a(z,u))),a(y,a(z,a(x,u)))).  [assumption].
+5 -R(x,y) | R(a(z,x),a(z,y)).  [clausify(1)].
+6 RR(x,x).  [assumption].
+7 -RR(x,y) | -R(y,z) | RR(x,z).  [clausify(2)].
+8 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(b,a(d,a(c,a(e,a(f,a(b,g))))))).  [deny(3)].
+9 R(a(x,a(y,a(z,a(u,w)))),a(x,a(z,a(u,a(y,w))))).  [ur(5,a,4,a)].
+10 RR(a(x,a(y,a(z,u))),a(y,a(z,a(x,u)))).  [ur(7,a,6,a,b,4,a)].
+12 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(b,a(d,a(e,a(f,a(b,g))))))).  [ur(7,b,4,a,c,8,a)].
+15 R(a(x,a(y,a(z,a(u,a(w,v5))))),a(x,a(y,a(u,a(w,a(z,v5)))))).  [ur(5,a,9,a)].
+18 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(e,a(b,a(d,a(f,a(b,g))))))).  [ur(7,b,9,a,c,12,a)].
+26 RR(a(x,a(y,a(z,a(u,w)))),a(y,a(x,a(u,a(z,w))))).  [ur(7,a,10,a,b,9,a)].
+47 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(d,a(e,a(b,a(f,a(b,g))))))).  [ur(7,b,9,a,c,18,a)].
+100 RR(a(x,a(y,a(z,a(u,a(w,v5))))),a(y,a(x,a(z,a(w,a(u,v5)))))).  [ur(7,a,26,a,b,15,a)].
+104 R(a(x,a(y,a(z,a(u,a(w,a(v5,v6)))))),a(x,a(y,a(z,a(w,a(v5,a(u,v6))))))).  [ur(5,a,15,a)].
+198 RR(a(x,a(y,a(z,a(u,a(w,v5))))),a(y,a(z,a(w,a(x,a(u,v5)))))).  [ur(7,a,100,a,b,9,a)].
+263 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(d,a(f,a(e,a(b,a(b,g))))))).  [ur(7,b,15,a,c,47,a)].
+908 RR(a(x,a(y,a(z,a(u,a(w,a(v5,v6)))))),a(y,a(z,a(w,a(u,a(v5,a(x,v6))))))).  [ur(7,a,198,a,b,104,a)].
+909 $F.  [resolve(908,a,263,a)].
+
+============================== end of proof ==========================
