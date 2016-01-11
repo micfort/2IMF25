@@ -1,0 +1,26 @@
+set(ignore_option_dependencies). % GUI handles dependencies
+
+if(Prover9). % Options for Prover9
+  assign(max_seconds, 60).
+end_if.
+
+if(Mace4).   % Options for Mace4
+  assign(max_seconds, 60).
+end_if.
+
+formulas(assumptions).
+
+R(a(x,a(y,a(z,u))), a(y,a(z,a(x,u)))). %Rewrite fact given
+R(x,y) -> R(a(z,x),a(z,y)). %Allow fact to be used to rewrite subterms of a(x,y)
+RR(x,x). %Base reflexive rewrite for determining transitive closure
+(RR(x,y) & R(y,z)) -> RR(x,z). %Allow transitive closure
+
+end_of_list.
+
+formulas(goals).
+
+RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))), a(b,a(d,a(c,a(e,a(f,a(b,g))))))).
+
+end_of_list.
+
+
