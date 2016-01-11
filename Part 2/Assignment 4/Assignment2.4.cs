@@ -18,10 +18,15 @@ namespace Assignment2._4
 		const string S = "S";
 		const string A = "A";
 		const string T = "T";
-		const string Trans = "Trans";
 		static int[] ATime = { 0, 1, 2, 5, 10, 20 };
-		const int MaxTime = 97;
-		const int MaxSteps = 12;
+		//const int MaxTime = 15;
+		//const int MinTimeSteps = 1;
+		//const int MaxSteps = 16;
+		//const int Adventureres = 4;
+		const int MaxTime = 358;
+		const int MinTimeSteps = 15;
+		const int MaxSteps = 16;
+		const int Adventureres = 9;
 
 
 		static TextWriter output;
@@ -36,6 +41,7 @@ namespace Assignment2._4
 		{
 			return operation("and", attributes);
 		}
+
 		public static string or(params string[] attributes)
 		{
 			return operation("or", attributes);
@@ -128,11 +134,7 @@ namespace Assignment2._4
 
 		public static void Requirements(int timestep)
 		{
-			write(lessEqual(PlusForJoin(1, ATime.Length, i => array(Trans, i, timestep)), "2"));
-			for (int i = 1; i <= ATime.Length - 1; i++)
-			{
-				write(GreaterEqual(array(Trans, i, timestep), "0"));
-			}
+			
 		}
 
 		public static string NotInCross(int t, int a1)
@@ -155,44 +157,10 @@ namespace Assignment2._4
 		{
 			write(
 				and(
-					array(SL, t), array(S, a1, t), array(S, a2, t),
-					not(array(SL, t+1)), not(array(S, a1, t+1)), not(array(S, a2, t+1)),
+					equals(array(SL, t), array(S, a1, t)), equals(array(SL, t), array(S, a2, t)),
+					not(equals(array(SL, t), array(SL, t+1))), not(equals(array(S, a1, t), array(S, a1, t+1))), not(equals(array(S, a2, t), array(S, a2, t+1))),
 					NotInCross(t, a1, a2),
-                    equals(array(Trans, a1, t), "1"), equals(array(Trans, a2, t), "1"),
 					equals(array(T, t+1), plus(array(T, t), Math.Max(ATime[a1], ATime[a2]).ToString()))
-				)
-			);
-
-			write(
-				and(
-					not(array(SL, t)), not(array(S, a1, t)), not(array(S, a2, t)),
-					array(SL, t+1), array(S, a1, t+1), array(S, a2, t+1),
-					NotInCross(t, a1, a2),
-					equals(array(Trans, a1, t), "1"), equals(array(Trans, a2, t), "1"),
-					equals(array(T, t + 1), plus(array(T, t), Math.Max(ATime[a1], ATime[a2]).ToString()))
-				)
-			);
-		}
-
-		public static void CrossSingle(int t, int a)
-		{
-			write(
-				and(
-					array(SL, t), array(S, a, t),
-					not(array(SL, t + 1)), not(array(S, a, t + 1)),
-					NotInCross(t, a),
-					equals(array(Trans, a, t), "2"),
-					equals(array(T, t + 1), plus(array(T, t), ATime[a].ToString()))
-				)
-			);
-
-			write(
-				and(
-					not(array(SL, t)), not(array(S, a, t)),
-					array(SL, t + 1), array(S, a, t + 1),
-					NotInCross(t, a),
-					equals(array(Trans, a, t), "2"),
-					equals(array(T, t + 1), plus(array(T, t), ATime[a].ToString()))
 				)
 			);
 		}
@@ -229,10 +197,8 @@ namespace Assignment2._4
 			{
 				write("(or ");
 				for (int a1 = 1; a1 <= ATime.Length - 1; a1++)
-					for (int a2 = 1; a2 < a1; a2++)
+					for (int a2 = 1; a2 <= a1; a2++)
 						CrossDouble(i, a1, a2);
-				for (int a = 1; a <= ATime.Length - 1; a++)
-					CrossSingle(i, a);
 				write(")");
 			}
 
@@ -312,13 +278,13 @@ namespace Assignment2._4
 		{
 			List<int> times = new List<int>();
 			times.Add(0);
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < Adventureres; i++)
 			{
 				times.Add(Convert.ToInt32(Math.Round(Math.Pow(2, i))));
 			}
 			ATime = times.ToArray();
 
-			int timesteps = 1;
+			int timesteps = MinTimeSteps-1;
 
 			do
 			{

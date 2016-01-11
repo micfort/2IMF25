@@ -1,0 +1,74 @@
+\chapter{Exercise 4}
+\section{Problem}
+As free assignment we have chosen the rope bridge problem\cite{RopBridge}. Four adventureres have to cross a rope bridge at night. The bridge can maximally hold 2 people at the same time. They have only a single flashlight, so when 2 people cross the bridge, someone have to bring back the flashlight. The adventures take a different amount of time to cross the bridge, due to different level of experience. The adventureres take 1, 2, 5 and 10 minutes. What is the minimum time that all the adventureres cross the bridge?
+
+We have generalized this problem with N adventureres, where adventure $n$ takes $2^{n-1}$ minutes.
+
+\section{Solution}
+$A$ is the set of all the adventureres. $S_{i, t}$ iff the adventure is at his start position at timestep $t$, or in case that $i=L$ then it is the flashlights position at timestep $t$. The time that adventurer $a$ takes to cross the bridge is equals to $\text{Time}(a)$.
+
+The following has to be true, that the flashlight and the adventureres are at it's start position, $S_{L,0} \land \forall_{a \in A} S_{a,0}$. This is also the initialization.
+
+To cross the bridge we have to following formula:
+\begin{align}
+\forall_{t, a_1\in A, a_2\in A} (& \nonumber \\
+&(S_{L, t} \Leftrightarrow S_{a_1, t} \Leftrightarrow S_{a_2, t})  \label{eq:4:Pos} \\
+& \land (S_{L, t+1} \not\Leftrightarrow S_{L, t}) \land (S_{a_1, t+1} \not\Leftrightarrow S_{a_1, t}) \land (S_{a_2, t+1} \not\Leftrightarrow S_{a_2, t}) \label{eq:4:NestPos} \\
+& \land \forall_{a_3 \in A \land a_3 \not = a_1 \land a_3 \not= a_2}(S_{a_3, t} \Leftrightarrow S_{a_3, t+1})\label{eq:4:KeepSame}  \\ 
+& \land T_{t+1} = T_{t} + \max(\text{Time}(a_1), \text{Time}(a_2)) \label{eq:4:TimeCost} \\
+&)\nonumber
+\end{align}
+Part \ref{eq:4:Pos} of the formula makes sure that the adventurers are in the correct position. Part \ref{eq:4:Pos} is that the next position of the adventures is changed. Part \ref{eq:4:KeepSame} makes sure that the rest of the adventurers sit still while the 2 adventurers $a_1$ and $a_2$ cross the bridge. The last part (\ref{eq:4:TimeCost}) takes the time cost in to account. If $a_1 = a_2$ then only a single person crosses the bridge, wich is possible in the problem description. The formula above takes care of the crossing to and from the starting position.
+
+To check if there is a success, the following must be true: $\exists_{t}(\forall_{a \in A} S_{a, t} \land T_{t} < T_{max})$. Where $T_{max}$ the limit of time that the adventureres can use.
+
+Here follows snippets with comments of the SMT code, where there are only 4 adventurers(for simplification) and a maximal time limit of 15 minutes:
+
+\begin{verbatim}
+(benchmark RopeBridge.smt
+:logic QF_UFLIA
+:extrafuns ((T Int Int))
+:extrapreds ((S Int Int) (SL Int))
+:formula (and
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; initialization rules
+(= (T 0) 0)
+(S 1 0)
+(S 2 0)
+(S 3 0)
+(S 4 0)
+(SL 0)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; the first step
+(or
+; When only adventurer 1 moves from 1 position to another
+(and 
+(= (SL 0) (S 1 0)) (= (SL 0) (S 1 0)) 
+(not (= (SL 0) (SL 1))) (not (= (S 1 0) (S 1 1))) (not (= (S 1 0) (S 1 1))) 
+(= (S 2 0) (S 2 1))(= (S 3 0) (S 3 1))(= (S 4 0) (S 4 1)) 
+(= (T 1) (+ (T 0) 1))
+)
+(and 
+; When adventurerer 1 and 2 moves from 1 position to another
+(= (SL 0) (S 2 0)) (= (SL 0) (S 1 0)) 
+(not (= (SL 0) (SL 1))) (not (= (S 2 0) (S 2 1))) (not (= (S 1 0) (S 1 1))) 
+(= (S 3 0) (S 3 1)) (= (S 4 0) (S 4 1)) 
+(= (T 1) (+ (T 0) 2))
+)
+; other combinations that crosses the bridge
+...
+)
+; here follows the next steps
+...
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; the succes conditions
+(or
+(and (not (S 1 0)) (not (S 2 0)) (not (S 3 0)) (not (S 4 0)) (<= (T 0) 15))
+(and (not (S 1 1)) (not (S 2 1)) (not (S 3 1)) (not (S 4 1)) (<= (T 1) 15))
+...
+)
+))
+\end{verbatim}
+
+When all this is inputed in yices, we get the results. When we have 9 adventurerers, the bridge needs to be crossed 15 times so that all the adventurerers are crossed. The time it takes is 358 minutes. Wich is suprising, because that the largest time a crossing takes is 256 minutes, wich makes up the greatest part of 356. This model hides tries to hide long crossings wich each other, let the adventureres that take 256 minutes and 128 minutes cross together.
