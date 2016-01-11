@@ -1,0 +1,147 @@
+\chapter{Exercise 2}
+
+\section{Problem}
+We have a number of bottles, with each having a specific capacity. We want to find out whether it is possible to arrive at a certain distribution of water in the bottles, starting from some distribution and only using the following actions:\\
+\begin{itemize}
+\item One bottle is filled to its maximum capacity, at some water tap.
+\item One bottle is emptied.
+\item The contents of one bottle is poured into a second one. The pouring stops either when the first bottle is empty or the second bottle is full. 
+\end{itemize}
+
+\section{Solution}
+We start by defining the set of bottles. For a situation of $n$ bottles, we use variables $b_i$ and $m_i$ for the current capacity and maximum capacity, respectively, for the $i$th bottle, with $i \in \{1..n \}$. Since we are working with a reachability problem from some configuration to another, we will employ the use of NuSMV with Linear Temporal Logic. Introducing these variables in the required format gives our input a start such as this:\\
+\begin{verbatim}
+MODULE main
+DEFINE
+m1 := 144;
+m2 := 72;
+m3 := 16;
+VAR
+b1 : 0..m1;
+b2 : 0..m2;
+b3 : 0..m3;
+\end{verbatim}
+We also need to define an initial state $b_{i,0}$ for each bottle $b_i$. It is of the essence that all variables have a defined initial state. This initialization takes the following form:
+\begin{verbatim}
+INIT
+b1 = 3 & b2 = 3 & b3 = 3
+\end{verbatim}
+At the end of the input we get the goal function. This essentially looks the same as the initial state description, except that we negate the goal and tell NuSMV to check if the goal state holds globally. This means that if we reach the goal, a report is created of the trace leading to the goal, as this is where the global demand fails. Using the first problem as an example, we want to reach the goal satisfying $b_1 = 8 \land b_2 = 11$, which, as a negated global demand, looks like this:\\
+\begin{verbatim}
+LTLSPEC G !(b1 = 8 & b2 = 11)
+\end{verbatim}
+Finally, we have the state transitions. The most important thing to keep in mind here is that whenever the full transition clause is satisfied, all bottles must have a defined new state, such that the state cannot transition arbitrarily. We first define the simple transitions that have no interaction among bottles, being the emptying, filling and being unchanged of a bottle. We allow these to be done at the same time for the bottles individually, as this does not affect the possibility space and simply skips transitions. The logical representation for this is:\\
+\[ \bigwedge_{i=1}^n b_{i,1} = 0 \lor b_{i,1} = m_i \lor b_{i,1} = b_{i,0} \]
+In NuSMV we put it in a shape like this:\\
+\begin{verbatim}
+TRANS
+((next(b1) = 0 | next(b1) = m1 | next(b1) = b1) &
+(next(b2) = 0 | next(b2) = m2 | next(b2) = b2) &
+(next(b3) = 0 | next(b3) = m3 | next(b3) = b3))
+\end{verbatim}
+From here, we can add transitions through disjunction. We simply make a dedicated description of the next state for all bottles for each added transition. To keep this a bit more compact, we use a disjunction over a bottle $b_i$ filling a bottle $b_j$ and vice versa, conjucted with all other bottles keeping their old state. Filling a bottle is done with two cases. One is the case where the sum of the current contents are within the capacity of the target bottle, in which case it is put in there and the other bottle is emptied. The other case is used in any other situation and sets the contents of the target bottle to its maximum, and subtracts the difference between its old and maximum capacities from the other bottle. This cannot make the other bottle go below $0$, as then the sum of contents would fit the capacity of the target bottle.
+\[ \bigvee_{i=0,j=i+1}^n ((((b_{i,0} + b_{j,0} \leq m_i \rightarrow b_{i,1} = b_{i,0} + b_{j,0} \land b_{j,1} = 0) \land \]
+\[ (b_{i,0} + b_{j,0} > m_i \rightarrow b_{i,1} = m_i \land b_{j,1} = b_{j,0} + b_{i,0} - m_i)) \lor  \]
+\[((b_{j,0} + b_{i,0} \leq m_j \rightarrow b_{j,1} = b_{j,0} + b_{i,0} \land b_{i,1} = 0) \land \]
+\[ (b_{j,0} + b_{i,0} > m_j \rightarrow b_{j,1} = m_j \land b_{i,1} = b_{i,0} + b_{j,0} - m_j))) \land  \]
+\[ \bigwedge_{k=0}^n (k \neq i \land k \neq j) \rightarrow  b_{k,1} = b_{k,0} )\]
+As an example for bottles $b_1$ and $b_2$ pouring into each other, we have the NuSMV input:\\
+\begin{verbatim}
+| ((case b1 + b2 <= m1 : next(b1) = b1 + b2 & next(b2) = 0; 
+TRUE : next(b1) = m1 & next(b2) = b2 + b1 - m1; esac |
+case b2 + b1 <= m2 : next(b2) = b2 + b1 & next(b1) = 0; 
+TRUE : next(b2) = m2 & next(b1) = b1 + b2 - m2; esac) & 
+next(b3) = b3)
+\end{verbatim}
+On the completed input file "in" we then call "NuSMV in" in the terminal to get our results.
+
+\subsection{sub question A}
+For the first concrete situation, we consider the situation that we have $3$ bottles, with $144$, $72$ and $16$ units of capacity, respectively. We start out with each bottles containing $3$ units, and we wish to find a scenario, if any, reaching a state in which the first bottle contains $8$ units and the second contains $11$. The input for NuSMV in this particular situation is used above as examples for the solution. The resulting output shows us that it is indeed possible to reach the desired state:\\
+\begin{tabular}{ l | r  r  r }
+   & $b_1$ & $b_2$ & $b_3$  \\
+  \hline			
+  $s_1$ & 3 & 3 & 3 \\ 
+  $s_2$ & 3 & 72 & 16 \\ 
+  $s_3$ & 75 & 0 & 16 \\ 
+  $s_4$ & 75 & 16 & 0 \\ 
+  $s_5$ & 59 & 16 & 16 \\ 
+  $s_6$ & 59 & 32 & 0 \\ 
+  $s_7$ & 43 & 32 & 16 \\ 
+  $s_8$ & 43 & 48 & 0 \\ 
+  $s_9$ & 27 & 48 & 16 \\ 
+  $s_{10}$ & 27 & 64 & 0 \\ 
+  $s_{11}$ & 11 & 64 & 16 \\ 
+  $s_{12}$ & 11 & 72 & 8 \\ 
+  $s_{13}$ & 11 & 0 & 8 \\ 
+  $s_{14}$ & 0 & 11 & 8 \\ 
+  $s_{15}$ & 8 & 11 & 0 \\ 
+\end{tabular}
+
+\subsection{sub question B}
+In the next situation, we take the situation from A, and let the second bottle have a capacity of $80$ units, in stead of $72$. For this, we just change the following input the the input below it:
+\begin{verbatim}
+DEFINE
+m1 := 144;
+m2 := 72;
+m3 := 16;
+
+changes to
+
+DEFINE
+m1 := 144;
+m2 := 80;
+m3 := 16;
+\end{verbatim}
+As it turns out, this makes the goal no longer reachable, as we get the following output from NuSMV:\\
+\begin{verbatim}
+-- specification  G !(b1 = 8 & b2 = 11)  is true
+\end{verbatim}
+
+\subsection{sub question C}
+In the final situation, we once again take the situation from A, but now we replace the capacity of the third bottle by $28$ units, rather than $16$. Similar to the change in $B$, we change the input as follows:
+\begin{verbatim}
+DEFINE
+m1 := 144;
+m2 := 72;
+m3 := 16;
+
+changes to
+
+DEFINE
+m1 := 144;
+m2 := 72;
+m3 := 28;
+\end{verbatim}
+This configuration still allows our goal to be reached, but it becomes a bit more involved:\\
+\begin{tabular}{ l | r  r  r }
+   & $b_1$ & $b_2$ & $b_3$  \\
+  \hline			
+  $s_1$ & 3 & 3 & 3 \\ 
+  $s_2$ & 144 & 3 & 0 \\ 
+  $s_3$ & 116 & 3 & 28 \\ 
+  $s_4$ & 116 & 31 & 0 \\ 
+  $s_5$ & 88 & 31 & 28 \\ 
+  $s_6$ & 88 & 59 & 0 \\ 
+  $s_7$ & 60 & 59 & 28 \\ 
+  $s_8$ & 60 & 72 & 15 \\ 
+  $s_9$ & 132 & 0 & 15 \\ 
+  $s_{10}$ & 132 & 15 & 0 \\ 
+  $s_{11}$ & 104 & 15 & 28 \\ 
+  $s_{12}$ & 104 & 43 & 0 \\ 
+  $s_{13}$ & 76 & 43 & 28 \\ 
+  $s_{14}$ & 76 & 71 & 0 \\ 
+  $s_{15}$ & 48 & 71 & 28 \\ 
+  $s_{16}$ & 48 & 72 & 27 \\ 
+  $s_{17}$ & 120 & 0 & 27 \\ 
+  $s_{18}$ & 120 & 27 & 0 \\ 
+  $s_{19}$ & 92 & 27 & 28 \\ 
+  $s_{20}$ & 92 & 55 & 0 \\ 
+  $s_{21}$ & 64 & 55 & 28 \\ 
+  $s_{22}$ & 64 & 72 & 11 \\ 
+  $s_{23}$ & 64 & 0 & 11 \\ 
+  $s_{24}$ & 64 & 11 & 0 \\ 
+  $s_{25}$ & 36 & 11 & 28 \\ 
+  $s_{26}$ & 36 & 11 & 0 \\ 
+  $s_{27}$ & 8 & 11 & 0 \\ 
+\end{tabular}
+This last solution did take a clear second to compute. As such, we suspect that either this generalization or the problem itself might not be efficiently scalable. We suspect that it is likely the nature of the problem, as the restrictions to the reachable state space are rather small.

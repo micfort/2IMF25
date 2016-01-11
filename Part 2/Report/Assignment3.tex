@@ -1,0 +1,148 @@
+\chapter{Exercise 3}
+For this exercise it was not entirely clear what kind of answer was expected. We solved the problems efficiently using the allowed tools Prover9 and Mace4.
+
+\section{sub question A}
+For the first problem we note that the binary operator $*$ is essentially a function symbol. Since $x$,$y$, and $z$ are universally quantified variables by default in Prover9, we can simply take over the notation and use it as input. This also counts for $I$ being used as a constant and $inv(x)$ serving as a unary function symbol. Prover9 will use the definitions given to prove the desired properties. Our assumptions can be put in normally, as $*$ is not a reserved character, giving us the partial input:\\
+\begin{verbatim}
+formulas(assumptions).
+
+x*(y*z)=(x*y)*z.
+x*I=x.
+x*inv(x)=I.
+
+end_of_list.
+\end{verbatim}
+We then put in all the goals in a similar fashion:\\
+\begin{verbatim}
+formulas(goals).
+
+I*x=x.
+inv(inv(x))=x.
+inv(x)*x=I.
+x*y=y*x.
+
+end_of_list.
+\end{verbatim}
+Conveniently, Prover9 will produce individual proofs for each of the goals and omit the proof for any goals that do not hold from the assumptions. The result returned immediately, proving the first $3$ properties and notifying the failure of the $4$th, the symmetry property. The first property, confirming that $I$ forms the identity element for $*$, is proven as such:\\
+\begin{verbatim}
+1 I * x = x # label(non_clause) # label(goal).  [goal].
+5 x * (y * z) = (x * y) * z.  [assumption].
+6 (x * y) * z = x * (y * z).  [copy(5),flip(a)].
+7 x * I = x.  [assumption].
+8 x * inv(x) = I.  [assumption].
+9 I * c1 != c1.  [deny(1)].
+13 x * (I * y) = x * y.  [para(7(a,1),6(a,1,1)),flip(a)].
+14 x * (inv(x) * y) = I * y.  [para(8(a,1),6(a,1,1)),flip(a)].
+19 I * inv(inv(x)) = x.  [para(8(a,1),14(a,1,2)),rewrite([7(2)]),flip(a)].
+21 x * inv(inv(y)) = x * y.  [para(19(a,1),6(a,2,2)),rewrite([7(2)])].
+22 I * x = x.  [para(19(a,1),13(a,2)),rewrite([21(5),13(4)])].
+23 $F.  [resolve(22,a,9,a)].
+\end{verbatim}
+The second property, confirming that the inverse of an inverse is the original value is proven as such:\\
+\begin{verbatim}
+2 inv(inv(x)) = x # label(non_clause) # label(goal).  [goal].
+5 x * (y * z) = (x * y) * z.  [assumption].
+6 (x * y) * z = x * (y * z).  [copy(5),flip(a)].
+7 x * I = x.  [assumption].
+8 x * inv(x) = I.  [assumption].
+10 inv(inv(c2)) != c2.  [deny(2)].
+13 x * (I * y) = x * y.  [para(7(a,1),6(a,1,1)),flip(a)].
+14 x * (inv(x) * y) = I * y.  [para(8(a,1),6(a,1,1)),flip(a)].
+19 I * inv(inv(x)) = x.  [para(8(a,1),14(a,1,2)),rewrite([7(2)]),flip(a)].
+21 x * inv(inv(y)) = x * y.  [para(19(a,1),6(a,2,2)),rewrite([7(2)])].
+22 I * x = x.  [para(19(a,1),13(a,2)),rewrite([21(5),13(4)])].
+26 x * (inv(x) * y) = y.  [back_rewrite(14),rewrite([22(5)])].
+30 inv(inv(x)) = x.  [para(8(a,1),26(a,1,2)),rewrite([7(2)]),flip(a)].
+31 $F.  [resolve(30,a,10,a)].
+\end{verbatim}
+The third property, confirming that applying the function $*$ to a value and its inverse forms the identity element $I$ is proven as such:\\
+\begin{verbatim}
+3 inv(x) * x = I # label(non_clause) # label(goal).  [goal].
+5 x * (y * z) = (x * y) * z.  [assumption].
+6 (x * y) * z = x * (y * z).  [copy(5),flip(a)].
+7 x * I = x.  [assumption].
+8 x * inv(x) = I.  [assumption].
+11 inv(c3) * c3 != I.  [deny(3)].
+13 x * (I * y) = x * y.  [para(7(a,1),6(a,1,1)),flip(a)].
+14 x * (inv(x) * y) = I * y.  [para(8(a,1),6(a,1,1)),flip(a)].
+19 I * inv(inv(x)) = x.  [para(8(a,1),14(a,1,2)),rewrite([7(2)]),flip(a)].
+21 x * inv(inv(y)) = x * y.  [para(19(a,1),6(a,2,2)),rewrite([7(2)])].
+22 I * x = x.  [para(19(a,1),13(a,2)),rewrite([21(5),13(4)])].
+26 x * (inv(x) * y) = y.  [back_rewrite(14),rewrite([22(5)])].
+30 inv(inv(x)) = x.  [para(8(a,1),26(a,1,2)),rewrite([7(2)]),flip(a)].
+34 inv(x) * x = I.  [para(30(a,1),8(a,1,2))].
+35 $F.  [resolve(34,a,11,a)].
+\end{verbatim}
+
+Since the symmetry property did not hold, we want Mace4 to find the smallest counter example. To prevent it from needlessly searching for counterexamples of the other properties, we remove these from the list of goals. We then run Mace4 on the adjusted input. Here we make use of the fact that Mace4 looks for counter examples incrementally, starting at minimal variable space. From this we got that the first counter example stems from having a group of size $6$, being the smallest group size for which the property does not hold. The specific result we got was the following:\\
+\begin{verbatim}
+ * : 
+       | 0 1 2 3 4 5
+    ---+------------
+     0 | 0 1 2 3 4 5
+     1 | 1 0 3 2 5 4
+     2 | 2 4 0 5 1 3
+     3 | 3 5 1 4 0 2
+     4 | 4 2 5 0 3 1
+     5 | 5 3 4 1 2 0
+
+ I : 0
+
+ c1 : 1
+
+ c2 : 2
+
+ inv : 
+         0 1 2 3 4 5
+    ----------------
+         0 1 2 4 3 5
+\end{verbatim}
+Here we see the operator $*$ with its first input on the left and the second on the top. We have $0$ as our identity and a simple inverse function. We can verify by hand that all definitions given still apply. The variables $c1$ and $c2$ indicate the values needed to disprove symmetry. If we check $1*2 = 2*1$ on the function table, it shows that $1*2 = 3$ and $2*1=4$, hence $1*2 \neq 2*1$.
+
+\section{sub question B}
+To solve the second problem, we construct a rewrite system using predicate logic on top of functions. Here we again have the benefit that $x$,$y$,$z$ and $u$ are universally quantified. We make a relation $R(x,y)$ indicating that $x$ can be rewritten to $y$. We then simply state the single rule as our first property. We then need to extend the rewrite system with a function forming the transitive closure of the rewrite predicate, as otherwise we can only prove things within one rewrite step, we call this transitive closure predicate $RR(x,y)$. We start by giving this transitive closure reflexivity to start from. We then follow this with stating that if we have a transitive rewrite from $x$ to $y$ and a regular rewrite from $y$ to $z$, we must also have a transitive rewrite from $x$ to $z$. These properties give us the following input:\\
+\begin{verbatim}
+formulas(assumptions).
+
+R(a(x,a(y,a(z,u))), a(y,a(z,a(x,u)))). %Rewrite fact given
+RR(x,x). %Base reflexive rewrite for determining transitive closure
+(RR(x,y) & R(y,z)) -> RR(x,z). %Allow transitive closure
+\end{verbatim}
+This develops the transitive rewrite relation to rewrite the first $3$ $a$ functions in an series of embedded $a$ functions, and allows $u$ to be any sub term. We do however still lack the ability to apply the rewrite inside of an $a$ function as an embedded substitution. For this, we need the following extra assumption, stating that if two terms may be rewritten, then they may also be rewritten within an $a$ function's right argument:\\
+\begin{verbatim}
+R(x,y) -> R(a(z,x),a(z,y)). %Allow fact to be used to rewrite subterms of a(x,y)
+
+end_of_list.
+\end{verbatim}
+Finally, we throw in the goal of swapping $c$ and $d$ using transitive rewrites:\\
+\begin{verbatim}
+formulas(goals).
+
+RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))), a(b,a(d,a(c,a(e,a(f,a(b,g))))))).
+
+end_of_list.
+\end{verbatim}
+Within a fraction of a second, Prover9 finds a sequence of rewrites proving that the goal can be met, hence there is a finite number of rewrites to swap $c$ and $d$:\\
+\begin{verbatim}
+1 R(x,y) -> R(a(z,x),a(z,y)) # label(non_clause).  [assumption].
+2 RR(x,y) & R(y,z) -> RR(x,z) # label(non_clause).  [assumption].
+3 RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(b,a(d,a(c,a(e,a(f,a(b,g))))))) # label(non_clause) # label(goal).  [goal].
+4 R(a(x,a(y,a(z,u))),a(y,a(z,a(x,u)))).  [assumption].
+5 -R(x,y) | R(a(z,x),a(z,y)).  [clausify(1)].
+6 RR(x,x).  [assumption].
+7 -RR(x,y) | -R(y,z) | RR(x,z).  [clausify(2)].
+8 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(b,a(d,a(c,a(e,a(f,a(b,g))))))).  [deny(3)].
+9 R(a(x,a(y,a(z,a(u,w)))),a(x,a(z,a(u,a(y,w))))).  [ur(5,a,4,a)].
+10 RR(a(x,a(y,a(z,u))),a(y,a(z,a(x,u)))).  [ur(7,a,6,a,b,4,a)].
+12 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(b,a(d,a(e,a(f,a(b,g))))))).  [ur(7,b,4,a,c,8,a)].
+15 R(a(x,a(y,a(z,a(u,a(w,v5))))),a(x,a(y,a(u,a(w,a(z,v5)))))).  [ur(5,a,9,a)].
+18 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(e,a(b,a(d,a(f,a(b,g))))))).  [ur(7,b,9,a,c,12,a)].
+26 RR(a(x,a(y,a(z,a(u,w)))),a(y,a(x,a(u,a(z,w))))).  [ur(7,a,10,a,b,9,a)].
+47 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(d,a(e,a(b,a(f,a(b,g))))))).  [ur(7,b,9,a,c,18,a)].
+100 RR(a(x,a(y,a(z,a(u,a(w,v5))))),a(y,a(x,a(z,a(w,a(u,v5)))))).  [ur(7,a,26,a,b,15,a)].
+104 R(a(x,a(y,a(z,a(u,a(w,a(v5,v6)))))),a(x,a(y,a(z,a(w,a(v5,a(u,v6))))))).  [ur(5,a,15,a)].
+198 RR(a(x,a(y,a(z,a(u,a(w,v5))))),a(y,a(z,a(w,a(x,a(u,v5)))))).  [ur(7,a,100,a,b,9,a)].
+263 -RR(a(b,a(c,a(d,a(e,a(f,a(b,g)))))),a(c,a(d,a(f,a(e,a(b,a(b,g))))))).  [ur(7,b,15,a,c,47,a)].
+908 RR(a(x,a(y,a(z,a(u,a(w,a(v5,v6)))))),a(y,a(z,a(w,a(u,a(v5,a(x,v6))))))).  [ur(7,a,198,a,b,104,a)].
+909 $F.  [resolve(908,a,263,a)].
+\end{verbatim}
